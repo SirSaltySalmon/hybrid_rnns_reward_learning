@@ -24,7 +24,9 @@ share/python-wheels/
 MANIFEST
 
 # Local environment and data (not part of upstream repo)
-custom/
 data/
 hybrnn_venv/
+hybrnn_venv_wsl/
+custom/.wsl_venv_path
+custom/outputs/
 paper.md
