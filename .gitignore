@@ -22,3 +22,9 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+
+# Local environment and data (not part of upstream repo)
+custom/
+data/
+hybrnn_venv/
+paper.md
