@@ -1,15 +1,10 @@
 #!/usr/bin/env bash
-# Run a custom experiment on GPU from WSL.
-#
-# Usage (Windows PowerShell):
-#   wsl -d Ubuntu-24.04 bash custom/wsl_run.sh debug
-#   wsl -d Ubuntu-24.04 bash custom/wsl_run.sh paper_replication
-#   wsl -d Ubuntu-24.04 bash custom/wsl_run.sh --list
+# Probe WSL JAX GPU (called from train_models.ipynb — avoid inline bash -c; wsl.exe
+# strips $VAR in -c strings on Windows).
 
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$REPO_ROOT"
 
 if [[ -f "$REPO_ROOT/custom/.wsl_venv_path" ]]; then
   VENV_DIR="$(cat "$REPO_ROOT/custom/.wsl_venv_path")"
@@ -23,10 +18,6 @@ if [[ ! -x "$VENV_DIR/bin/python" ]]; then
   exit 1
 fi
 
+# shellcheck disable=SC1091
 source "$VENV_DIR/bin/activate"
-
-# Avoid JAX preallocating all VRAM on 8GB laptop GPUs.
-export XLA_PYTHON_CLIENT_PREALLOCATE=false
-export XLA_PYTHON_CLIENT_MEM_FRACTION="${XLA_PYTHON_CLIENT_MEM_FRACTION:-0.85}"
-
-exec python custom/run.py "$@"
+python -c "import jax; print(jax.__version__); print(jax.default_backend()); print(jax.devices())"

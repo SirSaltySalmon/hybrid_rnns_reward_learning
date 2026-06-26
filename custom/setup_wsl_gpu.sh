@@ -56,7 +56,11 @@ y = jax.numpy.dot(x, x).block_until_ready()
 print("GPU matmul OK")
 PY
 
+mkdir -p "$REPO_ROOT/custom"
+echo "$VENV_DIR" >"$REPO_ROOT/custom/.wsl_venv_path"
+
 echo ""
 echo "Setup complete."
+echo "Venv path saved to custom/.wsl_venv_path"
 echo "Run training:"
 echo "  wsl -d Ubuntu-24.04 bash custom/wsl_run.sh debug"
