@@ -14,7 +14,7 @@ Training grid in Methods: lr {1e-3, 1e-4, 1e-5}, weight decay {1e-3, 1e-4,
 with best combo chosen on validation (Supplementary Table 1).
 
 This module applies the repo's non-debug defaults (lr=1e-4, wd=1e-5,
-hidden=16, batch=32, 1e6 steps), which sit inside the paper's sweep grid.
+hidden=32, batch=128, 1e6 steps), which sit inside the paper's sweep grid.
 """
 
 # Held-out test accuracies reported in the paper (percent).
@@ -31,10 +31,10 @@ def apply_paper_training(config):
   """Paper-scale optimizer and schedule (non-debug)."""
   config.debug = False
   config.n_training_steps = int(1e6)
-  config.batch_size = 32
+  config.batch_size = 128
   config.learning_rate = 1e-4
   config.weight_decay = 1e-5
-  config.network_params.hidden_size = 16
+  config.network_params.hidden_size = 32
   return config
 
 

@@ -1,5 +1,13 @@
 """Drive the memory-window sweep: train + held-out eval over N x seeds.
 
+Presets (see also custom/train_models.ipynb):
+  smoke      N={5,50},     seed 0,     500 steps
+  one        N={20},       seed 0,   2,000 steps
+  all_smoke  full N grid,  seed 0,     500 steps
+  all        full N grid,  seed 0,  10,000 steps
+  full       full N grid,  seeds 42-46, 1M steps
+  full_i     N_GRID[i] only, seeds 42-46, 1M steps
+
 Usage (repo root, venv active):
   python custom/memory_window/sweep.py --preset smoke
   python custom/memory_window/sweep.py --preset full
@@ -24,6 +32,7 @@ WSL GPU:
 import argparse
 import csv
 import json
+import pickle
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -83,6 +92,8 @@ def run(preset='smoke', out_dir=None, data=None, seed=None):
   out_dir = Path(out_dir) if out_dir else (OUTPUTS_DIR / 'memory_window' / ts)
   out_dir.mkdir(parents=True, exist_ok=True)
   results_path = out_dir / 'results.csv'
+  params_dir = out_dir / 'params'
+  params_dir.mkdir(parents=True, exist_ok=True)
 
   if data is None:
     seed0_cfg = make_config(cfg['n_grid'][0], seeds[0], 1)
@@ -92,25 +103,39 @@ def run(preset='smoke', out_dir=None, data=None, seed=None):
   with results_path.open('w', newline='') as f:
     writer = csv.writer(f)
     writer.writerow(
-        ['N', 'seed', 'n_training_steps', 'test_acc_pct', 'valid_acc_pct']
+        ['N', 'seed', 'n_training_steps', 'test_acc_pct', 'valid_acc_pct',
+         'final_train_loss', 'final_valid_loss', 'params_path']
     )
     for n in cfg['n_grid']:
       for seed_val in seeds:
         config = make_config(n, seed_val, cfg['n_training_steps'])
         print(f'\n=== N={n} seed={seed_val} steps={config.n_training_steps} ===')
-        params = train_windowed.train(
+        params, final_losses = train_windowed.train(
             config, data=data, log_every=cfg['log_every']
         )
         test_acc = evaluate_mod.evaluate(config, params, data['test_dat'])
         valid_acc = evaluate_mod.evaluate(config, params, data['valid_dat'])
+        train_loss = final_losses['train_loss']
+        valid_loss = final_losses['valid_loss']
         print(f'  -> held-out test acc {test_acc:.2f}%  '
-              f'valid acc {valid_acc:.2f}%')
+              f'valid acc {valid_acc:.2f}%  '
+              f'final train/valid loss {train_loss:.4f}/{valid_loss:.4f}')
+
+        params_path = params_dir / f'params_N{n}_seed{seed_val}.pkl'
+        with params_path.open('wb') as pf:
+          pickle.dump(params, pf)
+
+        rel_params_path = params_path.relative_to(out_dir).as_posix()
         writer.writerow(
-            [n, seed_val, config.n_training_steps, test_acc, valid_acc]
+            [n, seed_val, config.n_training_steps, test_acc, valid_acc,
+             train_loss, valid_loss, rel_params_path]
         )
         f.flush()
         rows.append(dict(N=n, seed=seed_val, test_acc_pct=test_acc,
-                         valid_acc_pct=valid_acc))
+                         valid_acc_pct=valid_acc,
+                         final_train_loss=train_loss,
+                         final_valid_loss=valid_loss,
+                         params_path=str(params_path)))
 
   # Representative resolved config for the sweep. memory_window_N and
   # random_seed vary per run (see "sweep" below); everything else is shared.

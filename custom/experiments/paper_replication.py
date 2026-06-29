@@ -1,7 +1,7 @@
 """Paper-faithful Memory-ANN replication (~68.3% held-out accuracy).
 
 This is the winning model from Eckstein et al. (Nat Hum Behav, 2026).
-It uses the paper's training scale (1M steps, batch 32) and the hybrid
+It uses the paper's training scale (1M steps, batch 128, hidden 32) and the hybrid
 architecture implemented as ``birnn`` in this repo (see train_models.ipynb
 "Fit winning hybRNN model").
 

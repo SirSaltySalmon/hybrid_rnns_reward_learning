@@ -24,7 +24,12 @@ def load_data(config):
 
 
 def train(config, data=None, log_every=500):
-  """Fit one window-limited Memory-ANN. Returns fitted params."""
+  """Fit one window-limited Memory-ANN.
+
+  Returns ``(params, final_losses)`` where ``final_losses`` is a dict with
+  ``train_loss`` and ``valid_loss`` (per-trial NLL) measured after the final
+  optimisation step.
+  """
   n = int(config.memory_window_N)
   batch_size = int(config.batch_size)
   if data is None:
@@ -72,11 +77,13 @@ def train(config, data=None, log_every=500):
   params = forward.init(next(rng), w0)
   opt_state = jax.jit(optimizer.init)(params)
 
+  final_train_loss = float('nan')
   for step in range(int(config.n_training_steps)):
     windows, targets = sample_windows(train_dat, next(rng))
     params, opt_state, loss = update(
         params, next(rng), opt_state, windows, targets
     )
+    final_train_loss = float(loss)
     if step % log_every == 0:
       vw, vt = sample_windows(valid_dat, next(rng))
       valid_loss = loss_fn(params, next(rng), vw, vt)
@@ -85,4 +92,7 @@ def train(config, data=None, log_every=500):
       scalars = {'train_loss': [float(loss)], 'valid_loss': [float(valid_loss)]}
       print(metrics.format_step_report(step, scalars, n_trials=1))
 
-  return params
+  vw, vt = sample_windows(valid_dat, next(rng))
+  final_valid_loss = float(loss_fn(params, next(rng), vw, vt))
+  final_losses = {'train_loss': final_train_loss, 'valid_loss': final_valid_loss}
+  return params, final_losses
