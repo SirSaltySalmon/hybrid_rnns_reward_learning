@@ -26,7 +26,7 @@ fi
 source "$VENV_DIR/bin/activate"
 
 # Avoid JAX preallocating all VRAM on 8GB laptop GPUs.
-export XLA_PYTHON_CLIENT_PREALLOCATE=false
-export XLA_PYTHON_CLIENT_MEM_FRACTION="${XLA_PYTHON_CLIENT_MEM_FRACTION:-0.85}"
+# export XLA_PYTHON_CLIENT_PREALLOCATE=false
+# export XLA_PYTHON_CLIENT_MEM_FRACTION="${XLA_PYTHON_CLIENT_MEM_FRACTION:-0.85}"
 
 exec python custom/run.py "$@"

@@ -54,7 +54,7 @@ from custom.paths import OUTPUTS_DIR
 N_GRID = [3, 5, 8, 12, 20, 35, 50, 75, 100, 150]
 #N_GRID = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 SEEDS = [42, 43, 44, 45, 46]
-_FULL_TRAIN = dict(seeds=SEEDS, n_training_steps=int(1e6), log_every=2000)
+_FULL_TRAIN = dict(seeds=SEEDS, n_training_steps=int(1e6), log_every=10000)
 
 PRESETS = {
     'full': dict(n_grid=N_GRID, **_FULL_TRAIN),
